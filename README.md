@@ -5,11 +5,15 @@ running the code WITH file:
 
 sbt stage
  
-./target/universal/stage/bin/topwords -c 10 -l 4 -w 6 -s 2 -f 3 -i /workspace/project-1b-dynamic-word-cloud-team-11/src/main/scala/hellotest/text/lesmiserables01unkngoog_djvu.txt
+example run: 
+
+./target/universal/stage/bin/topwords -c 10 -l 4 -w 6 -s 2 -f 3 -i /workspace/project-1b-dynamic-word-cloud-team-11/src/main/scala/hellotest/text/lesmiserables01unkngoog_djvu.txt -b src/main/scala/hellotest/blacklist/blacklist.txt
 
 -c, -l, -w, -s, -f should all be run with int agruments after the letter
 
 keep -i for file reading
+
+-b for blacklist reading
 
 running WITHOUT file:
 
@@ -30,3 +34,11 @@ This will compile the code, run the test cases defined in the TestWordProcessor.
 You can generate a test coverage report using sbt-scoverage. Run the following command:
 sbt clean coverage test coverageReport
 
+
+
+Extra Credit completed:
+
+Ignore List (blacklist)
+Case Insensitive
+Every k steps
+Minimum frequency

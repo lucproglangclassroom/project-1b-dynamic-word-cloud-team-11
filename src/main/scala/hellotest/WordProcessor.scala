@@ -9,13 +9,14 @@ object WordProcessor {
     minLength: Int,
     windowSize: Int,
     cloudSize: Int,
-    minFrequency: Int
+    minFrequency: Int,
+    blacklist: Set[String] // Add blacklist parameter
   ): Map[String, Int] = {
     val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()
 
     words.foreach { word =>
-      if (word.length >= minLength) {
+      if (word.length >= minLength && !blacklist.contains(word.nn)) { // Skip blacklisted words
         queue.add(word)
         wordCount(word.nn) = wordCount.getOrElse(word.nn, 0) + 1
 

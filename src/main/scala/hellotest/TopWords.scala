@@ -22,12 +22,13 @@ object Main:
     @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = 5,
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3,
-    @arg(short = 'i', doc = "path to input text file") inputFile: String = ""
+    @arg(short = 'i', doc = "path to input text file") inputFile: String = "",
+    @arg(short = 'b', doc = "path to blacklist file") blacklistFile: String = ""
   ): Unit = {
     val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()
     var stepCounter = 0
-    
+
     // Log the parsed arguments
     println(s"Cloud Size: $cloudSize")
     println(s"Minimum Length: $minLength")
@@ -37,6 +38,9 @@ object Main:
     if (inputFile.nonEmpty) {
       println(s"Input File: $inputFile")
     }
+    if (blacklistFile.nonEmpty) {
+      println(s"Blacklist File: $blacklistFile")
+    }
 
     // Read input lines from the specified file or standard input
     val inputLines = if (inputFile.nonEmpty) {
@@ -45,10 +49,18 @@ object Main:
       LazyList.continually(StdIn.readLine()).takeWhile(line => line != null && line.nonEmpty)
     }
 
-    // Process each line
-    val allWords = inputLines.iterator.flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty))
+    // Read blacklisted words from the blacklist file and convert to lowercase
+    val blacklist = if (blacklistFile.nonEmpty) {
+      scala.io.Source.fromFile(blacklistFile).getLines().map(_.toLowerCase.nn).toSet
+    } else {
+      Set.empty[String]
+    }
 
-    val result = WordProcessor.processWords(allWords.iterator.to(Seq), minLength, windowSize, cloudSize, minFrequency)
+    // Process each line and convert words to lowercase
+    val allWords = inputLines.iterator.flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty).map(_.toLowerCase.nn))
+
+    // Pass the blacklist to WordProcessor
+    val result = WordProcessor.processWords(allWords.iterator.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist)
 
     println(s"Processed word cloud: ${result.mkString(", ")}")
   }
