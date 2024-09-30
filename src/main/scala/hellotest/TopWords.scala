@@ -19,13 +19,12 @@ object Main:
   def run(
     @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = 10,
     @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = 6,
-    @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = 5,
+    @arg(short = 'w', doc = "number of words to scan (window size)") windowSize: Int = 5,
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3,
     @arg(short = 'i', doc = "path to input text file") inputFile: String = "",
     @arg(short = 'b', doc = "path to blacklist file") blacklistFile: String = ""
   ): Unit = {
-    val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()
     var stepCounter = 0
 
@@ -56,13 +55,19 @@ object Main:
       Set.empty[String]
     }
 
-    // Process each line and convert words to lowercase
-    val allWords = inputLines.iterator.flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty).map(_.toLowerCase.nn))
+    // Process words, limiting to `windowSize`
+    val allWords = inputLines.iterator
+      .flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty).map(_.toLowerCase.nn))
+      .take(windowSize)
 
     // Pass the blacklist to WordProcessor
-    val result = WordProcessor.processWords(allWords.iterator.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist)
+    val result = WordProcessor.processWords(allWords.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist)
 
-    println(s"Processed word cloud: ${result.mkString(", ")}")
+    // Sort results by frequency before printing
+    val sortedResult = result.toSeq.sortBy(-_._2).take(cloudSize)
+
+    // Print processed word cloud
+    println(s"Processed word cloud: ${sortedResult.map { case (word, count) => s"$word -> $count" }.mkString(", ")}")
   }
 
 end Main

@@ -10,15 +10,19 @@ object WordProcessor {
     windowSize: Int,
     cloudSize: Int,
     minFrequency: Int,
-    blacklist: Set[String] // Add blacklist parameter
+    blacklist: Set[String]
   ): Map[String, Int] = {
     val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()
 
     words.foreach { word =>
-      if (word.length >= minLength && !blacklist.contains(word.nn)) { // Skip blacklisted words
-        queue.add(word)
-        wordCount(word.nn) = wordCount.getOrElse(word.nn, 0) + 1
+      // Remove punctuation and convert the word to lowercase
+      val cleanWord = word.replaceAll("[^a-zA-Z0-9]", "").nn.toLowerCase.nn
+
+      // Only process words that are not in the blacklist and meet the length requirement
+      if (cleanWord.length >= minLength && !blacklist.contains(cleanWord)) {
+        queue.add(cleanWord)
+        wordCount(cleanWord) = wordCount.getOrElse(cleanWord, 0) + 1
 
         if (queue.size() > windowSize) {
           val removedWord = queue.remove()
@@ -28,6 +32,12 @@ object WordProcessor {
       }
     }
 
-    wordCount.filter(_._2 >= minFrequency).toSeq.sortBy(-_._2).take(cloudSize).toMap
+    // Sort the word counts by frequency (descending) and filter by minimum frequency
+    wordCount
+      .filter(_._2 >= minFrequency)  // Only include words above min frequency
+      .toSeq                         // Convert to sequence for sorting
+      .sortBy(-_._2)                // Sort by frequency (descending)
+      .take(cloudSize)              // Limit to the cloud size
+      .toMap                         // Convert back to a map
   }
 }
