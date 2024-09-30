@@ -5,7 +5,7 @@ running the code WITH file:
 
 sbt stage
  
-./target/universal/stage/bin/topwords -c -l -w -s -f -i src/main/scala/hellotest/text/<filename>
+./target/universal/stage/bin/topwords -c 10 -l 4 -w 6 -s 2 -f 3 -i /workspace/project-1b-dynamic-word-cloud-team-11/src/main/scala/hellotest/text/lesmiserables01unkngoog_djvu.txt
 
 -c, -l, -w, -s, -f should all be run with int agruments after the letter
 
@@ -16,3 +16,17 @@ running WITHOUT file:
 ./target/universal/stage/bin/topwords -c -l -w -s -f
 
 -c, -l, -w, -s, -f should all be run with int agruments after the letter
+
+Word Processor Tests:
+Test 1: Verifies that the word processor correctly tracks word counts and handles the sliding window logic.
+Test 2: Verifies that the word processor respects the minimum frequency requirement.
+
+The tests for this project are written using ScalaTest. You can run them with the following command:
+
+sbt test
+
+This will compile the code, run the test cases defined in the TestWordProcessor.scala file, and output the results.
+
+You can generate a test coverage report using sbt-scoverage. Run the following command:
+sbt clean coverage test coverageReport
+

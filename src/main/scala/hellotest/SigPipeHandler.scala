@@ -8,7 +8,6 @@ object SigPipeHandler {
       override def handle(signal: Signal): Unit = {
         val signalName = signal.getName
 
-        // Check if signalName is null first, and then safely compare with "PIPE"
         if (signalName eq null) {
           // signalName is null, do nothing
         } else if (signalName.equals("PIPE")) {
@@ -18,7 +17,6 @@ object SigPipeHandler {
       }
     }
 
-    // Install the handler for SIGPIPE
-    val _ = Signal.handle(new Signal("PIPE"), signalHandler) // Ignore the return value
+    val _ = Signal.handle(new Signal("PIPE"), signalHandler)
   }
 }
