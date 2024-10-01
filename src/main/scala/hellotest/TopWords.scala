@@ -5,65 +5,50 @@ import scala.language.unsafeNulls
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import mainargs._
 
-object Main:
+object TopWords:
 
   def main(args: Array[String]): Unit = {
-    // Install SIGPIPE handler
     SigPipeHandler.install()
-
-    // Run the parser
     val _ = ParserForMethods(this).runOrExit(args.toIndexedSeq) // Explicitly discard return value
   }
 
   @main
   def run(
-    @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = 10,
-    @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = 6,
+    @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = 3,
+    @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = 2,
     @arg(short = 'w', doc = "number of words to scan (window size)") windowSize: Int = 5,
-    @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
-    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3,
-    @arg(short = 'i', doc = "path to input text file") inputFile: String = "",
-    @arg(short = 'b', doc = "path to blacklist file") blacklistFile: String = ""
+    @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 2,
+    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 1
   ): Unit = {
-    val wordCount = scala.collection.mutable.Map[String, Int]()
+
+    val queue = new CircularFifoQueue[String](windowSize)
     var stepCounter = 0
 
-    // Log the parsed arguments
-    println(s"Cloud Size: $cloudSize")
-    println(s"Minimum Length: $minLength")
-    println(s"Window Size: $windowSize")
-    println(s"Every K Steps: $everyKSteps")
-    println(s"Minimum Frequency: $minFrequency")
-    if (inputFile.nonEmpty) {
-      println(s"Input File: $inputFile")
-    }
-    if (blacklistFile.nonEmpty) {
-      println(s"Blacklist File: $blacklistFile")
-    }
+    // Process input lines
+    LazyList.continually(StdIn.readLine()).takeWhile(line => line != null && line.nonEmpty).foreach { line =>
+      val words = line.split("\\s+").nn.filter(_.nn.nonEmpty)
 
-    // Read input lines from the specified file or standard input
-    val inputLines = if (inputFile.nonEmpty) {
-      scala.io.Source.fromFile(inputFile).getLines()
-    } else {
-      LazyList.continually(StdIn.readLine()).takeWhile(line => line != null && line.nonEmpty)
-    }
+      words.foreach { word =>
+        if (word.length >= minLength) {
+          queue.add(word)
 
-    // Read blacklisted words from the blacklist file and convert to lowercase
-    val blacklist = if (blacklistFile.nonEmpty) {
-      scala.io.Source.fromFile(blacklistFile).getLines().map(_.toLowerCase.nn).toSet
-    } else {
-      Set.empty[String]
+          // Increment step counter
+          stepCounter += 1
+
+          // Update word cloud after every `K` steps
+          if (stepCounter % everyKSteps == 0) {
+            val currentWindowWords = queue.toArray(Array.ofDim[String](queue.size())).toSeq
+            WordProcessor.processWords(currentWindowWords, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], ConsoleCloudObserver) // Pass empty blacklist
+          }
+        }
+      }
     }
 
-    // Process words, limiting to windowSize
-    val allWords = inputLines.iterator
-      .flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty).map(_.toLowerCase.nn))
-      .take(windowSize)
-
-    // Pass the blacklist to WordProcessor along with the observer
-    WordProcessor.processWords(
-      allWords.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist, ConsoleCloudObserver
-    )
+    // Final update for leftover words
+    if (stepCounter % everyKSteps != 0) {
+      val currentWindowWords = queue.toArray(Array.ofDim[String](queue.size())).toSeq
+      WordProcessor.processWords(currentWindowWords, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], ConsoleCloudObserver) // Pass empty blacklist
+    }
   }
 
-end Main
+end TopWords
