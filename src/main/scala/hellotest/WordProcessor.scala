@@ -11,7 +11,7 @@ object WordProcessor {
     cloudSize: Int,
     minFrequency: Int,
     blacklist: Set[String],
-    observer: WordCloudObserver // Add observer here
+    observer: WordCloudObserver
   ): Unit = {
     val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()

@@ -44,7 +44,6 @@ class TestWordProcessor extends AnyFlatSpec {
     output must not include ("world -> 1")  // Should be excluded because of frequency
   }
 
-
   it should "exclude words shorter than the minimum length" in {
     val words = Seq("hi", "world", "hello", "scala")
     val output = testWordProcessor(words, minLength = 4)
@@ -93,4 +92,22 @@ class TestWordProcessor extends AnyFlatSpec {
 
     output must include ("hello -> 10000")
   }
+   it should "handle blacklisted words from a file" in {
+    val words = Seq("hello", "world", "scala", "java")
+    val blacklist = Set("hello", "java")
+    val output = testWordProcessor(words, blacklist = blacklist)
+
+    output must not include ("hello -> 1")
+    output must not include ("java -> 1")
+    output must include ("world -> 1")
+    output must include ("scala -> 1")
+  }
+
+  it should "handle empty input and empty blacklist" in {
+    val words = Seq.empty[String]
+    val output = testWordProcessor(words, blacklist = Set.empty[String])
+
+    output must be (empty)
+  }
+
 }
