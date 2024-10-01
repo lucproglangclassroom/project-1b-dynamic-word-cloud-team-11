@@ -55,19 +55,15 @@ object Main:
       Set.empty[String]
     }
 
-    // Process words, limiting to `windowSize`
+    // Process words, limiting to windowSize
     val allWords = inputLines.iterator
       .flatMap(_.split("\\s+").nn.filter(_.nn.nonEmpty).map(_.toLowerCase.nn))
       .take(windowSize)
 
-    // Pass the blacklist to WordProcessor
-    val result = WordProcessor.processWords(allWords.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist)
-
-    // Sort results by frequency before printing
-    val sortedResult = result.toSeq.sortBy(-_._2).take(cloudSize)
-
-    // Print processed word cloud
-    println(s"Processed word cloud: ${sortedResult.map { case (word, count) => s"$word -> $count" }.mkString(", ")}")
+    // Pass the blacklist to WordProcessor along with the observer
+    WordProcessor.processWords(
+      allWords.to(Seq), minLength, windowSize, cloudSize, minFrequency, blacklist, ConsoleCloudObserver
+    )
   }
 
 end Main

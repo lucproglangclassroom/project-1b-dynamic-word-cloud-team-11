@@ -10,8 +10,9 @@ object WordProcessor {
     windowSize: Int,
     cloudSize: Int,
     minFrequency: Int,
-    blacklist: Set[String]
-  ): Map[String, Int] = {
+    blacklist: Set[String],
+    observer: WordCloudObserver // Add observer here
+  ): Unit = {
     val queue = new CircularFifoQueue[String](windowSize)
     val wordCount = scala.collection.mutable.Map[String, Int]()
 
@@ -29,15 +30,10 @@ object WordProcessor {
           wordCount(removedWord.nn) -= 1
           if (wordCount(removedWord.nn) == 0) wordCount -= removedWord.nn
         }
+
+        // Notify observer after each update
+        observer.updateCloud(wordCount.toMap)
       }
     }
-
-    // Sort the word counts by frequency (descending) and filter by minimum frequency
-    wordCount
-      .filter(_._2 >= minFrequency)  // Only include words above min frequency
-      .toSeq                         // Convert to sequence for sorting
-      .sortBy(-_._2)                // Sort by frequency (descending)
-      .take(cloudSize)              // Limit to the cloud size
-      .toMap                         // Convert back to a map
   }
 }
