@@ -31,8 +31,11 @@ object WordProcessor {
           if (wordCount(removedWord.nn) == 0) wordCount -= removedWord.nn
         }
 
-        // Notify observer after each update
-        observer.updateCloud(wordCount.toMap)
+        // Filter word counts by minimum frequency
+        val filteredWordCount = wordCount.filter { case (_, count) => count >= minFrequency }
+
+        // Notify observer with only words that meet the minFrequency condition
+        observer.updateCloud(filteredWordCount.toMap)
       }
     }
   }
