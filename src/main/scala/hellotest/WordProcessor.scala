@@ -29,8 +29,6 @@ object WordProcessor:
         queue.add(cleanWord)
         wordCount(cleanWord) = wordCount.getOrElse(cleanWord, 0) + 1
 
-        // Log word processing
-        logger.debug(s"Processing word: $cleanWord, current count: ${wordCount(cleanWord)}")
 
         // Handle sliding window eviction
         if (queue.size() > windowSize) {
@@ -47,8 +45,7 @@ object WordProcessor:
       }
     }
 
-    // Log final word cloud
-    logger.info(s"Final word cloud: ${wordCount.mkString(", ")}")
+    
   }
 
 end WordProcessor
