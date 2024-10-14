@@ -21,7 +21,16 @@ class TestWordProcessor extends AnyFlatSpec {
     minFrequency: Int = 1,
     blacklist: Set[String] = Set.empty
   ): String = captureOutput {
-    WordProcessor.processWords(words, minLength, windowSize, cloudSize, minFrequency, blacklist, ConsoleCloudObserver)
+    // Pass a function to handle the word cloud, capturing the output for testing
+    WordProcessor.processWords(words, minLength, windowSize, cloudSize, minFrequency, blacklist, wordCloud => {
+      if (wordCloud.isEmpty) {
+        println("No words meet the frequency or length criteria.")
+      } else {
+        val sortedCloud = wordCloud.toSeq.sortBy(-_._2)
+        val formattedOutput = sortedCloud.map { case (word, count) => s"$word: $count" }.mkString(", ")
+        println(s"Word Cloud: $formattedOutput")
+      }
+    })
   }
 
   "Word Processor" should "print the correct word cloud" in {
@@ -37,7 +46,7 @@ class TestWordProcessor extends AnyFlatSpec {
     val words = (1 to 10000).map(_ => "hello")
     val output = testWordProcessor(words)
 
-    output must include ("hello: 10000")  // Updated format
+    output must include ("hello: 10000")
   }
 
   it should "handle blacklisted words from a file" in {
