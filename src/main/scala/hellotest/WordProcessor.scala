@@ -14,9 +14,9 @@ object WordProcessor:
     cloudSize: Int,
     minFrequency: Int,
     blacklist: Set[String],
-    observer: WordCloudObserver
+    handleWordCloud: Map[String, Int] => Unit // Higher-order function
   ): Unit = {
-    
+
     def updateWordCount(wordCount: Map[String, Int], word: String): Map[String, Int] = {
       wordCount + (word -> (wordCount.getOrElse(word, 0) + 1))
     }
@@ -47,8 +47,8 @@ object WordProcessor:
           // Filter word counts by minimum frequency
           val filteredWordCount = finalWordCount.filter { case (_, count) => count >= minFrequency }
 
-          // Notify observer with only words that meet the minFrequency condition
-          observer.updateCloud(filteredWordCount)
+          // Pass the filtered word count to the handling function
+          handleWordCloud(filteredWordCount)
 
           // Process the rest of the words recursively
           processQueue(remainingWords.tail, newQueue, finalWordCount)

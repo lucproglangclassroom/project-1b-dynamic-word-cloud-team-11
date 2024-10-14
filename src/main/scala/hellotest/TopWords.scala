@@ -2,9 +2,9 @@ package hellotest
 
 import scala.io.StdIn
 import scala.language.unsafeNulls
-import org.apache.commons.collections4.queue.CircularFifoQueue
 import mainargs._
 import org.slf4j.LoggerFactory
+import scala.collection.immutable.Queue
 
 object TopWords:
 
@@ -37,16 +37,27 @@ object TopWords:
       LazyList.continually(StdIn.readLine()).takeWhile(line => line != null && line.nonEmpty)
     }
 
-    // Recursive function to update the sliding window
-    def updateWindow(window: Seq[String], word: String, maxSize: Int): Seq[String] = {
-      val newWindow = window :+ word
-      if (newWindow.size > maxSize) newWindow.drop(1) else newWindow
+    // Recursive function to update the sliding window using immutable Queue
+    def updateWindow(window: Queue[String], word: String, maxSize: Int): Queue[String] = {
+      val newWindow = window.enqueue(word)
+      if (newWindow.size > maxSize) newWindow.dequeue._2 else newWindow
+    }
+
+    // Higher-order function for processing the word cloud output
+    def processWordCloud(wordCloud: Map[String, Int]): Unit = {
+      if (wordCloud.isEmpty) {
+        println("No words meet the frequency or length criteria.")
+      } else {
+        val sortedCloud = wordCloud.toSeq.sortBy(-_._2)
+        val formattedOutput = sortedCloud.map { case (word, count) => s"$word: $count" }.mkString(", ")
+        println(s"Word Cloud: $formattedOutput")
+      }
     }
 
     // Recursive function to process input lines without mutable state
     def processLines(
       inputLines: LazyList[String],
-      window: Seq[String],
+      window: Queue[String],
       stepCounter: Int
     ): Unit = {
       if (inputLines.nonEmpty) {
@@ -60,19 +71,19 @@ object TopWords:
 
         // Update word cloud every `K` steps
         if (newStepCounter % everyKSteps == 0) {
-          WordProcessor.processWords(newWindow, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], ConsoleCloudObserver)
+          WordProcessor.processWords(newWindow.toList, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], processWordCloud)
         }
 
         // Recur for the remaining lines
         processLines(inputLines.tail, newWindow, newStepCounter)
       } else {
         // Final update for any leftover words
-        WordProcessor.processWords(window, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], ConsoleCloudObserver)
+        WordProcessor.processWords(window.toList, minLength, windowSize, cloudSize, minFrequency, Set.empty[String], processWordCloud)
       }
     }
 
     // Start processing the lines with initial state
-    processLines(inputLines, Seq.empty[String], 0)
+    processLines(inputLines, Queue.empty[String], 0)
 
     logger.info("TopWords processing complete.")
   }
